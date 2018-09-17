@@ -1,5 +1,6 @@
 package az.fuad.webflux.restapi.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -18,6 +19,7 @@ public class User {
     private String id;
 
     @NotBlank
+    @JsonIgnore
     private String username;
 
     @Email
