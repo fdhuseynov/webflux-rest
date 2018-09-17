@@ -3,6 +3,7 @@ package az.fuad.webflux.restapi.controller;
 import az.fuad.webflux.restapi.model.User;
 import az.fuad.webflux.restapi.repository.UserRepository;
 
+import az.fuad.webflux.restapi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,44 +24,37 @@ import javax.validation.Valid;
 public class UserController {
 
     @Autowired
-    UserRepository userRepository;
+    UserService userService;
 
     @GetMapping("/users")
     public Flux<User> getAllUsers() {
-        return userRepository.findAll();
+        return userService.retrieveAllUsers();
     }
 
     @GetMapping("/users/{id}")
     public Mono<ResponseEntity<User>> getUserById(@PathVariable  String id) {
-        return userRepository.findById(id)
+        return userService.retrieveUserById(id)
                 .map(savedUser -> ResponseEntity.ok(savedUser))
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/users")
     public Mono<User> createUser(@Valid @RequestBody User user) {
-        return userRepository.save(user);
+        return userService.createUser(user);
     }
 
     @PutMapping("/users/{id}")
     public Mono<ResponseEntity<User>> updateUser(@PathVariable String id,
                                                  @Valid @RequestBody User user) {
-        return userRepository.findById(id)
-                .flatMap(existingUser -> {
-                    existingUser.setName(user.getName());
-                    existingUser.setBirthDate(user.getBirthDate());
-                    return userRepository.save(user);
-                })
+        return userService.updateUser(id, user)
                 .map(updatedUser -> new ResponseEntity<>(updatedUser, HttpStatus.OK))
                 .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/users/{id}")
-    public Mono<ResponseEntity<Void>> deleteUser(@PathVariable String id) {
-        return userRepository.findById(id)
-                .flatMap(existingUser -> userRepository.delete(existingUser)
-                        .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)))
-                )
+    public Mono<ResponseEntity<User>> deleteUser(@PathVariable String id) {
+        return userService.deleteUser(id)
+                .map(deletedUser -> new ResponseEntity<>(deletedUser, HttpStatus.OK))
                 .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
